@@ -4,22 +4,118 @@ output:
   html_document:
     keep_md: true
 ---
+In this document, the process will be described for an analysis of a dataset collected from a personal activity monitoring device on one individual.  This data includes number of steps taken over 5 minute intervals during a two month period in late 2012.
+
 
 
 ## Loading and preprocessing the data
+
+First, the data must be loaded, after setting the directory to the appropriate location where the dataset may be found. 
+```{r}
+activitydata<-read.csv("activity.csv",header=TRUE)
+```
 
 
 
 ## What is mean total number of steps taken per day?
 
+The total number of steps taken per day can be calculated, and a histogram subsequently generated, with the following code.  
+
+```{r}
+library(plyr)
+totalsteps<-ddply(activitydata,.(date), summarise, total_steps=sum(steps))
+totalsteps
+hist(totalsteps$total_steps, main="Total steps taken each day", xlab="Total steps", ylab="frequency", col="green")
+```
+
+The mean and median of the total number of steps taken per day is determined here:
+
+```{r}
+mean(totalsteps$total_steps, na.rm=TRUE)
+median(totalsteps$total_steps, na.rm=TRUE)
+```
 
 
 ## What is the average daily activity pattern?
 
+The activity pattern over the course of a day can be examined using the interval data.  First, data containing "NA" for number of steps should be eliminated from the dataset.  The average number of steps for each time interval can be calculated.  Then, a time series plot may be generated showing the average number of steps taken over each five minute interval, over the time period studied.
+
+```{r}
+activitydatacomp<-na.omit(activitydata)
+intervals<-ddply(activitydatacomp,.(interval), summarise, average_steps=mean(steps))
+with(intervals, plot(interval, average_steps, type="l", main="Average number of steps taken over a day", ylab="Average number of steps",xlab="Time interval",col="purple"))
+```
+
+The time interval which contains the largest number of steps on average is:
+
+```{r}
+intervals[which(intervals$average_steps== max(intervals$average)),]
+```
 
 
 ## Imputing missing values
 
+It is important to keep track of the number of NAs to make sure that the data is not biased.  First the number of rows of data containing NAs should be determined.
+
+```{r}
+sum(!complete.cases(activitydata))
+```
+
+Then all the NA values may be replaced with the values for the average number of steps in that time interval, over the days of the study.  This requires generating a function to replace the NAs with a mean for that value, and then applying the function to the subset of the dataframe with the same time interval.  Afterwards the dataframe may be reordered by date and interval to restore it to a similar format to the original dataframe.
+
+
+```{r}
+impute.mean<-function(x) replace(x, is.na(x), mean(x, na.rm=TRUE))
+activitydataimput<-ddply(activitydata, ~ interval, transform, steps = impute.mean(steps))
+activitydataimputord<-activitydataimput[order(activitydataimput$date,activitydataimput$interval),]
+```
+
+After the missing data imputation, a histogram of total steps taken may be redrawn to see if it has changed, and the mean and median recalculated.
+
+```{r}
+totalstepsimput<-ddply(activitydataimputord,.(date), summarise, total_steps=sum(steps))
+totalstepsimput
+hist(totalstepsimput$total_steps, main="Total steps taken each day", xlab="Total steps", ylab="frequency", col="green")
+mean(totalstepsimput$total_steps, na.rm=TRUE)
+median(totalstepsimput$total_steps, na.rm=TRUE)
+```
+
+If the results from the imputed dataset are compared to the original, one can see that NA data have been replaced with numbers that constitute an average number of steps per day.  The histogram is relatively similar although the number of days in which an average number of steps has been taken has greatly increased since average step values were artificially inserted into the days where no data was taken (lots of NA values).  The mean total number of steps taken per day is completely unchanged and the median total number of steps taken per day is only slightly changed (from 10765 to 10766.19).  
+  In summary, imputing missing data using mean values leaves overall mean values intact but does lead to a misleading number of datapoints where average values are recorded, leading to a taller central peak.
+  
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
+The following code will be used to investigate if there is a difference in steps taken by this individual on weekdays compared to the weekend.  First each row of data must be classified by day of the week. This vector can then be simplified to two levels, either weekday or weekend. Then this vector can be converted to factor format and added to the original data frame.
+
+```{r}
+dateposix<-as.POSIXct(activitydataimputord$date)
+weekdaylabel<-weekdays(dateposix)
+weekdaylabel[weekdaylabel== "Monday"] <- "weekday"
+weekdaylabel[weekdaylabel== "Tuesday"] <- "weekday"
+weekdaylabel[weekdaylabel== "Wednesday"] <- "weekday"
+weekdaylabel[weekdaylabel== "Thursday"] <- "weekday"
+weekdaylabel[weekdaylabel== "Friday"] <- "weekday"
+weekdaylabel[weekdaylabel== "Saturday"] <- "weekend"
+weekdaylabel[weekdaylabel== "Sunday"] <- "weekend"
+factorweekdaylabel<-factor(weekdaylabel)
+activitydataimputord$weekday<-weekdaylabel
+```
+
+Next the data frame is split by weekday level and the average number of steps is calculated for each time interval. The resulting data frame is separated into two data frames, one for weekend and one for weekdays. These new data frames are used to generate a panel plot.
+
+The first panel shows the average number of steps taken over the course of the average weekend day, with each 5 minute time interval on the x-axis.  The bottom panel shows the same information over the course of the average weekday.
+
+```{r}
+intervals2<-ddply(activitydataimputord,.(weekday, interval), summarise, average_steps=mean(steps))
+intervalsweekday<-intervals2[1:288,]
+intervalsweekend<-intervals2[289:576,]
+par(mfcol=c(2,1))  #creates matrix of 2 graphs, one over the other
+par(cex=0.9)
+par(cex.lab=0.9)
+par(col="blue")
+par(mar=c(0.7,4,4,2))
+with(intervalsweekend, {plot(interval, average_steps, type="l",main="weekend",ylab="Number of steps",xaxt="n")})
+par(mar=c(4,4,0.7,2))
+with(intervalsweekday, {plot(interval, average_steps, type="l",main="weekday",ylab="Number of steps",xlab="Interval")})
