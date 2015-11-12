@@ -21,7 +21,7 @@ activitydata<-read.csv("activity.csv",header=TRUE)
 
 The total number of steps taken per day can be calculated, and a histogram subsequently generated, with the following code.  
 
-```{r}
+```{r totalsteps_histogram}
 library(plyr)
 totalsteps<-ddply(activitydata,.(date), summarise, total_steps=sum(steps))
 totalsteps
@@ -40,7 +40,7 @@ median(totalsteps$total_steps, na.rm=TRUE)
 
 The activity pattern over the course of a day can be examined using the interval data.  First, data containing "NA" for number of steps should be eliminated from the dataset.  The average number of steps for each time interval can be calculated.  Then, a time series plot may be generated showing the average number of steps taken over each five minute interval, over the time period studied.
 
-```{r}
+```{r intervals_plot}
 activitydatacomp<-na.omit(activitydata)
 intervals<-ddply(activitydatacomp,.(interval), summarise, average_steps=mean(steps))
 with(intervals, plot(interval, average_steps, type="l", main="Average number of steps taken over a day", ylab="Average number of steps",xlab="Time interval",col="purple"))
@@ -72,7 +72,7 @@ activitydataimputord<-activitydataimput[order(activitydataimput$date,activitydat
 
 After the missing data imputation, a histogram of total steps taken may be redrawn to see if it has changed, and the mean and median recalculated.
 
-```{r}
+```{r imput_totalsteps_histogram}
 totalstepsimput<-ddply(activitydataimputord,.(date), summarise, total_steps=sum(steps))
 totalstepsimput
 hist(totalstepsimput$total_steps, main="Total steps taken each day", xlab="Total steps", ylab="frequency", col="green")
@@ -107,7 +107,7 @@ Next the data frame is split by weekday level and the average number of steps is
 
 The first panel shows the average number of steps taken over the course of the average weekend day, with each 5 minute time interval on the x-axis.  The bottom panel shows the same information over the course of the average weekday.
 
-```{r}
+```{r panelplot}
 intervals2<-ddply(activitydataimputord,.(weekday, interval), summarise, average_steps=mean(steps))
 intervalsweekday<-intervals2[1:288,]
 intervalsweekend<-intervals2[289:576,]

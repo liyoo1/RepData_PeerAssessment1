@@ -93,7 +93,7 @@ totalsteps
 hist(totalsteps$total_steps, main="Total steps taken each day", xlab="Total steps", ylab="frequency", col="green")
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-2-1.png) 
+![](PA1_template_files/figure-html/totalsteps_histogram-1.png) 
 
 The mean and median of the total number of steps taken per day is determined here:
 
@@ -126,7 +126,7 @@ intervals<-ddply(activitydatacomp,.(interval), summarise, average_steps=mean(ste
 with(intervals, plot(interval, average_steps, type="l", main="Average number of steps taken over a day", ylab="Average number of steps",xlab="Time interval",col="purple"))
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-4-1.png) 
+![](PA1_template_files/figure-html/intervals_plot-1.png) 
 
 The time interval which contains the largest number of steps on average is:
 
@@ -241,7 +241,7 @@ totalstepsimput
 hist(totalstepsimput$total_steps, main="Total steps taken each day", xlab="Total steps", ylab="frequency", col="green")
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-8-1.png) 
+![](PA1_template_files/figure-html/imput_totalsteps_histogram-1.png) 
 
 ```r
 mean(totalstepsimput$total_steps, na.rm=TRUE)
@@ -302,4 +302,4 @@ par(mar=c(4,4,0.7,2))
 with(intervalsweekday, {plot(interval, average_steps, type="l",main="weekday",ylab="Number of steps",xlab="Interval")})
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-10-1.png) 
+![](PA1_template_files/figure-html/panelplot-1.png) 
